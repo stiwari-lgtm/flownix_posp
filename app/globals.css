@@ -1,0 +1,181 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Updated to exact Insuretech CRM color palette from PRD */
+  --background: oklch(1 0 0); /* Soft Gray background */
+  --foreground: oklch(0.145 0 0); /* Labels/Text color */
+  --card: oklch(1 0 0); /* Card Surfaces */
+  --card-foreground: oklch(0.145 0 0); /* Primary Deep Blue for card text */
+  --popover: oklch(1 0 0); /* White for popovers */
+  --popover-foreground: oklch(0.145 0 0); /* Primary Deep Blue */
+  --primary: oklch(0.205 0 0); /* Deep Blue primary */
+  --primary-foreground: oklch(0.985 0 0); /* White text on primary */
+  --secondary: oklch(0.97 0 0); /* Card surface color for secondary */
+  --secondary-foreground: oklch(0.205 0 0); /* Primary Deep Blue */
+  --muted: oklch(0.97 0 0); /* Soft Gray for muted elements */
+  --muted-foreground: oklch(0.556 0 0); /* Labels/Text for muted text */
+  --accent: oklch(0.97 0 0); /* Emerald Green accent */
+  --accent-foreground: oklch(0.205 0 0); /* White text on accent */
+  --destructive: oklch(0.577 0.245 27.325); /* Salmon Red for errors */
+  --destructive-foreground: oklch(0.577 0.245 27.325); /* White text on destructive */
+  --border: oklch(0.922 0 0); /* Card surface color for borders */
+  --input: oklch(0.922 0 0); /* White input backgrounds */
+  --ring: oklch(0.708 0 0); /* Alternative primary blue for focus rings */
+  --chart-1: oklch(0.646 0.222 41.116); /* Primary Deep Blue */
+  --chart-2: oklch(0.6 0.118 184.704); /* Emerald Green */
+  --chart-3: oklch(0.398 0.07 227.392); /* Clean Gold */
+  --chart-4: oklch(0.828 0.189 84.429); /* Fresh Teal */
+  --chart-5: oklch(0.769 0.188 70.08); /* Salmon Red */
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0); /* White sidebar */
+  --sidebar-foreground: oklch(0.145 0 0); /* Primary Deep Blue */
+  --sidebar-primary: oklch(0.205 0 0); /* Primary Deep Blue */
+  --sidebar-primary-foreground: oklch(0.985 0 0); /* White */
+  --sidebar-accent: oklch(0.97 0 0); /* Soft Gray */
+  --sidebar-accent-foreground: oklch(0.145 0 0); /* Primary Deep Blue */
+  --sidebar-border: oklch(0.922 0 0); /* Card surface color */
+  --sidebar-ring: oklch(0.708 0 0); /* Alternative primary blue */
+
+  /* Added custom Insuretech CRM specific colors */
+  --insuretech-primary: oklch(0.205 0 0); /* Deep Blue */
+  --insuretech-primary-alt: oklch(0.708 0 0); /* Alternative Deep Blue */
+  --insuretech-accent-green: oklch(0.6 0.118 184.704); /* Emerald Green */
+  --insuretech-accent-gold: oklch(0.398 0.07 227.392); /* Clean Gold */
+  --insuretech-background: oklch(1 0 0); /* Soft Gray */
+  --insuretech-card: oklch(1 0 0); /* Card Surfaces */
+  --insuretech-text: oklch(0.145 0 0); /* Labels/Text */
+  --insuretech-error: oklch(0.577 0.245 27.325); /* Salmon Red */
+  --insuretech-success: oklch(0.828 0.189 84.429); /* Fresh Teal */
+  --insuretech-white: oklch(0.985 0 0); /* White */
+}
+
+.dark {
+  /* Updated dark mode to maintain brand consistency */
+  --background: oklch(0.145 0 0); /* Dark version of primary */
+  --foreground: oklch(0.985 0 0); /* White text */
+  --card: oklch(0.145 0 0); /* Darker card surface */
+  --card-foreground: oklch(0.985 0 0); /* White card text */
+  --popover: oklch(0.145 0 0); /* Dark popover */
+  --popover-foreground: oklch(0.985 0 0); /* White popover text */
+  --primary: oklch(0.985 0 0); /* Lighter primary for dark mode */
+  --primary-foreground: oklch(0.205 0 0); /* White text */
+  --secondary: oklch(0.269 0 0); /* Dark secondary */
+  --secondary-foreground: oklch(0.985 0 0); /* White text */
+  --muted: oklch(0.269 0 0); /* Dark muted */
+  --muted-foreground: oklch(0.708 0 0); /* Light gray for muted text */
+  --accent: oklch(0.269 0 0); /* Keep accent green */
+  --accent-foreground: oklch(0.985 0 0); /* White text */
+  --destructive: oklch(0.396 0.141 25.723); /* Keep error red */
+  --destructive-foreground: oklch(0.637 0.237 25.331); /* White text */
+  --border: oklch(0.269 0 0); /* Dark border */
+  --input: oklch(0.269 0 0); /* Dark input */
+  --ring: oklch(0.439 0 0); /* Primary ring */
+  --chart-1: oklch(0.488 0.243 264.376); /* Lighter primary for charts */
+  --chart-2: oklch(0.696 0.17 162.48); /* Emerald Green */
+  --chart-3: oklch(0.769 0.188 70.08); /* Clean Gold */
+  --chart-4: oklch(0.627 0.265 303.9); /* Fresh Teal */
+  --chart-5: oklch(0.645 0.246 16.439); /* Salmon Red */
+  --sidebar: oklch(0.205 0 0); /* Dark sidebar */
+  --sidebar-foreground: oklch(0.985 0 0); /* White sidebar text */
+  --sidebar-primary: oklch(0.488 0.243 264.376); /* Primary sidebar */
+  --sidebar-primary-foreground: oklch(0.985 0 0); /* White */
+  --sidebar-accent: oklch(0.269 0 0); /* Dark accent */
+  --sidebar-accent-foreground: oklch(0.985 0 0); /* White */
+  --sidebar-border: oklch(0.269 0 0); /* Dark border */
+  --sidebar-ring: oklch(0.439 0 0); /* Primary ring */
+}
+
+@theme inline {
+  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Tab styling to match screenshot */
+  .nav-tab {
+    @apply px-6 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors;
+  }
+
+  .nav-tab.active {
+    @apply bg-primary text-primary-foreground rounded-full;
+  }
+
+  /* Button styling to match screenshot */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary/80 text-secondary-foreground px-4 py-2 rounded-lg font-medium transition-colors;
+  }
+
+  /* Priority badge styling to match screenshot */
+  .priority-high {
+    @apply bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .priority-medium {
+    @apply bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .priority-low {
+    @apply bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  /* Card styling to match screenshot */
+  .metric-card {
+    @apply bg-white rounded-xl p-6 shadow-sm border border-gray-100;
+  }
+
+  /* Activity card styling */
+  .activity-card {
+    @apply bg-white rounded-lg p-4 shadow-sm border border-gray-100;
+  }
+}
