@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +22,99 @@ import {
   Clock,
   CheckCircle,
 } from "lucide-react";
+import QuotationUploadModal from "../../components/leads/RequestQuotationModal";
+
+// Default leads (used only if no data in localStorage)
+const defaultLeads = [
+  {
+    id: "LD001",
+    clientName: "Rohit Gupta",
+    mobileNo: "9876543210",
+    insuranceType: "Motor",
+    insuranceProducts: [
+      "Private Car-Comprehensive",
+      "Private Car Bundled (1Y OD + 3Y TP)",
+    ],
+    requestedQuotations: [],
+    selectedQuotation: "",
+    status: "Pending",
+    remark: "-",
+  },
+  {
+    id: "LD002",
+    clientName: "Sneha Patel",
+    mobileNo: "9123456789",
+    insuranceType: "Health",
+    insuranceProducts: ["Health Individual", "Health Individual-Family Floater"],
+    requestedQuotations: ["Star Health Quote", "Max Bupa Quote"],
+    selectedQuotation: "Star Health Quote",
+    status: "Converted",
+    remark: "Customer approved Star Health",
+  },
+];
 
 export default function LeadsPage() {
+  const [leads, setLeads] = useState<typeof defaultLeads>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Load leads from localStorage on mount
+  useEffect(() => {
+    const storedLeads = localStorage.getItem("leads");
+    if (storedLeads) {
+      setLeads(JSON.parse(storedLeads));
+    } else {
+      setLeads(defaultLeads);
+    }
+  }, []);
+
+  // Save leads to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("leads", JSON.stringify(leads));
+  }, [leads]);
+
+  // Handle new lead submission
+  const handleAddLead = (newLead: any) => {
+    const nextId = `LD${String(leads.length + 1).padStart(3, "0")}`;
+
+    const leadToAdd = {
+      id: nextId,
+      clientName: newLead.clientName,
+      mobileNo: newLead.mobileNo,
+      insuranceType: newLead.insuranceType,
+      insuranceProducts: newLead.insuranceProducts || [],
+      requestedQuotations: [],
+      selectedQuotation: "",
+      status: "Pending",
+      remark: "-",
+    };
+
+    setLeads((prevLeads) => [...prevLeads, leadToAdd]);
+    setIsModalOpen(false);
+  };
+
+  // Filter leads based on search and status
+  const filteredLeads = leads.filter((lead) => {
+    const matchesSearch =
+      lead.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.insuranceType.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      lead.status.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Stats
+  const totalLeads = leads.length;
+  const activeLeads = leads.filter((lead) => lead.status !== "Converted").length;
+  const convertedLeads = leads.filter(
+    (lead) => lead.status === "Converted"
+  ).length;
+
   return (
     <DashboardLayout>
       <div className="p-4 sm:p-6 space-y-6">
@@ -32,9 +126,12 @@ export default function LeadsPage() {
             </h1>
             <p className="text-[#6b7b8c]">Track and manage your sales leads</p>
           </div>
-          <Button className="bg-[#254280] hover:bg-[#1e3666] text-white rounded-lg px-4 py-2 w-full sm:w-auto">
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-[#254280] hover:bg-[#1e3666] text-white rounded-lg px-4 py-2 w-full sm:w-auto"
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Create Lead
+            Request for Quotation
           </Button>
         </div>
 
@@ -49,11 +146,8 @@ export default function LeadsPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <p className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
-                      45
+                      {totalLeads}
                     </p>
-                    <span className="text-xs text-[#2ecc71] bg-[#2ecc71]/10 px-2 py-1 rounded-full">
-                      +12.5% vs last month
-                    </span>
                   </div>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#254280] rounded-lg flex items-center justify-center">
@@ -72,11 +166,8 @@ export default function LeadsPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <p className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
-                      28
+                      {activeLeads}
                     </p>
-                    <span className="text-xs text-[#2ecc71] bg-[#2ecc71]/10 px-2 py-1 rounded-full">
-                      +8.2% vs last month
-                    </span>
                   </div>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#2ecc71] rounded-lg flex items-center justify-center">
@@ -95,11 +186,8 @@ export default function LeadsPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <p className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">
-                      17
+                      {convertedLeads}
                     </p>
-                    <span className="text-xs text-[#2ecc71] bg-[#2ecc71]/10 px-2 py-1 rounded-full">
-                      +25.3% vs last month
-                    </span>
                   </div>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#254280] rounded-lg flex items-center justify-center">
@@ -115,17 +203,19 @@ export default function LeadsPage() {
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="text-lg font-semibold text-[#254280]">
-                Active Leads
+                Active Leads ({filteredLeads.length})
               </CardTitle>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                 <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#6b7b8c] w-4 h-4" />
                   <Input
                     placeholder="Search leads..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 w-full border-gray-200 focus:border-[#254280] focus:ring-[#254280]"
                   />
                 </div>
-                <Select defaultValue="all">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full sm:w-32 border-gray-200">
                     <Filter className="w-4 h-4 mr-2" />
                     <SelectValue placeholder="All Status" />
@@ -145,449 +235,164 @@ export default function LeadsPage() {
               <table className="w-full min-w-[1400px] rounded-lg overflow-hidden">
                 <thead className="bg-[#f5f7fa] border-b border-gray-200">
                   <tr>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
                       Lead ID
                     </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
                       Client Name
                     </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
+                      Mobile No.
+                    </th>
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
                       Insurance Type
                     </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
-                      Preferred Insurer
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
+                      Insurance Products
                     </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
                       Requested Quotations
                     </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
                       Selected Quotation
                     </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
                       Status
                     </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
                       Action
                     </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
+                    <th className="text-left py-3 px-3 sm:px-6 text-sm font-medium text-gray-700">
                       Remark
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  <tr className="hover:bg-gray-50">
-                    <td className="py-4 px-4">
-                      <span className="text-[#254280] font-medium text-sm">
-                        LD001
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#1a1a1a] font-medium text-sm">
-                        Rohit Gupta
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm whitespace-nowrap">
-                        Motor Insurance
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm whitespace-nowrap">
-                        HDFC ERGO, ICICI Lombard
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">-</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Select defaultValue="" disabled>
-                        <SelectTrigger className="w-36 border-gray-200 opacity-50 text-sm">
-                          <SelectValue placeholder="Select Quotation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hdfc">HDFC ERGO Quote</SelectItem>
-                          <SelectItem value="icici">
-                            ICICI Lombard Quote
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Badge className="bg-[#f5c642]/10 text-[#f5c642] hover:bg-[#f5c642]/20 text-xs">
-                        Pending
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Button
-                        size="sm"
-                        className="bg-[#254280] hover:bg-[#1e3666] text-white text-xs px-3 py-1"
+                  {filteredLeads.length > 0 ? (
+                    filteredLeads.map((lead) => (
+                      <tr
+                        key={lead.id}
+                        className="hover:bg-gray-50 transition-colors"
                       >
-                        Take Action
-                      </Button>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">-</span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50">
-                    <td className="py-4 px-4">
-                      <span className="text-[#254280] font-medium text-sm">
-                        LD002
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#1a1a1a] font-medium text-sm">
-                        Sneha Patel
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm whitespace-nowrap">
-                        Health Insurance
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Star Health, Max Bupa
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Star Health Quote, Max Bupa Quote
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Select defaultValue="star" disabled>
-                        <SelectTrigger className="w-36 border-gray-200 opacity-50 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="star">
-                            Star Health Quote
-                          </SelectItem>
-                          <SelectItem value="max">Max Bupa Quote</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Badge className="bg-[#2ecc71]/10 text-[#2ecc71] hover:bg-[#2ecc71]/20 text-xs">
-                        Converted
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-[#6b7b8c] hover:text-[#254280] p-1"
+                        <td className="py-4 px-4 text-[#254280] font-medium text-sm">
+                          {lead.id}
+                        </td>
+                        <td className="py-4 px-4 text-[#1a1a1a] font-medium text-sm">
+                          {lead.clientName}
+                        </td>
+                        <td className="py-4 px-4 text-[#6b7b8c] text-sm">
+                          {lead.mobileNo}
+                        </td>
+                        <td className="py-4 px-4 text-[#6b7b8c] text-sm">
+                          <Badge variant="outline" className="text-xs">
+                            {lead.insuranceType}
+                          </Badge>
+                        </td>
+                        <td className="py-4 px-4 text-[#6b7b8c] text-sm max-w-48">
+                          <div
+                            className="truncate"
+                            title={lead.insuranceProducts?.join(", ")}
+                          >
+                            {lead.insuranceProducts?.length > 0
+                              ? lead.insuranceProducts.join(", ")
+                              : "-"}
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-[#6b7b8c] text-sm">
+                          {lead.requestedQuotations?.length > 0
+                            ? lead.requestedQuotations.join(", ")
+                            : "-"}
+                        </td>
+                        <td className="py-4 px-4">
+                          <Select
+                            value={lead.selectedQuotation || ""}
+                            disabled={
+                              lead.status === "Pending" ||
+                              lead.requestedQuotations.length === 0
+                            }
+                          >
+                            <SelectTrigger
+                              className={`w-36 border-gray-200 text-sm ${
+                                lead.status === "Pending" ||
+                                lead.requestedQuotations.length === 0
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              }`}
+                            >
+                              <SelectValue placeholder="Select Quotation" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {lead.requestedQuotations.map((q) => (
+                                <SelectItem key={q} value={q}>
+                                  {q}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="py-4 px-4">
+                          <Badge
+                            className={`text-xs ${
+                              lead.status === "Pending"
+                                ? "bg-[#f5c642]/10 text-[#f5c642] border-[#f5c642]/20"
+                                : lead.status === "Converted"
+                                ? "bg-[#2ecc71]/10 text-[#2ecc71] border-[#2ecc71]/20"
+                                : "bg-[#254280]/10 text-[#254280] border-[#254280]/20"
+                            }`}
+                          >
+                            {lead.status}
+                          </Badge>
+                        </td>
+                        <td className="py-4 px-4">
+                          {lead.status === "Converted" ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[#6b7b8c] hover:text-[#254280] p-1"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="bg-[#254280] hover:bg-[#1e3666] text-white text-xs px-3 py-1"
+                            >
+                              Take Action
+                            </Button>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 text-[#6b7b8c] text-sm max-w-32">
+                          <div className="truncate" title={lead.remark}>
+                            {lead.remark}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={10}
+                        className="py-8 text-center text-[#6b7b8c]"
                       >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Customer approved Star Health
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50">
-                    <td className="py-4 px-4">
-                      <span className="text-[#254280] font-medium text-sm">
-                        LD003
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#1a1a1a] font-medium text-sm whitespace-nowrap">
-                        Deepak Sharma
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Life Insurance
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        HDFC Life, ICICI Prudential
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        HDFC Life Quote, ICICI Pru Quote
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Select defaultValue="">
-                        <SelectTrigger className="w-36 border-gray-200 text-sm">
-                          <SelectValue placeholder="Select Quotation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hdfc-life">
-                            HDFC Life Quote
-                          </SelectItem>
-                          <SelectItem value="icici-pru">
-                            ICICI Pru Quote
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Badge className="bg-[#254280]/10 text-[#254280] hover:bg-[#254280]/20 text-xs">
-                        In Progress
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Button
-                        size="sm"
-                        className="bg-[#254280] hover:bg-[#1e3666] text-white text-xs px-3 py-1"
-                      >
-                        Take Action
-                      </Button>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Awaiting customer decision
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50">
-                    <td className="py-4 px-4">
-                      <span className="text-[#254280] font-medium text-sm">
-                        LD004
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#1a1a1a] font-medium text-sm">
-                        Amit Singh
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Motor Insurance
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Bajaj Allianz, Tata AIG
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Bajaj Quote, Tata AIG Quote
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Select defaultValue="bajaj">
-                        <SelectTrigger className="w-36 border-gray-200 text-sm">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="bajaj">
-                            Bajaj Allianz Quote
-                          </SelectItem>
-                          <SelectItem value="tata">Tata AIG Quote</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Badge className="bg-[#254280]/10 text-[#254280] hover:bg-[#254280]/20 text-xs">
-                        In Progress
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Button
-                        size="sm"
-                        className="bg-[#254280] hover:bg-[#1e3666] text-white text-xs px-3 py-1"
-                      >
-                        Take Action
-                      </Button>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Following up with quotations
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50">
-                    <td className="py-4 px-4">
-                      <span className="text-[#254280] font-medium text-sm">
-                        LD005
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#1a1a1a] font-medium text-sm">
-                        Priya Krishnan
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        Travel Insurance
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        HDFC ERGO, Bharti AXA
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">-</span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Select defaultValue="" disabled>
-                        <SelectTrigger className="w-36 border-gray-200 opacity-50 text-sm">
-                          <SelectValue placeholder="Select Quotation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hdfc">HDFC ERGO Quote</SelectItem>
-                          <SelectItem value="bharti">
-                            Bharti AXA Quote
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Badge className="bg-[#f5c642]/10 text-[#f5c642] hover:bg-[#f5c642]/20 text-xs">
-                        Pending
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-4">
-                      <Button
-                        size="sm"
-                        className="bg-[#254280] hover:bg-[#1e3666] text-white text-xs px-3 py-1"
-                      >
-                        Take Action
-                      </Button>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className="text-[#6b7b8c] text-sm">
-                        New lead, needs initial contact
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Converted Leads Table */}
-        <Card className="bg-white shadow-sm border-0">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-[#254280] flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-[#2ecc71]" />
-                Converted Leads
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px] rounded-lg overflow-hidden">
-                <thead className="bg-[#f5f7fa] border-b border-gray-200">
-                  <tr>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
-                      Lead ID
-                    </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
-                      Client Name
-                    </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
-                      Insurance Type
-                    </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
-                      Selected Quotation
-                    </th>
-                    <th className="text-left py-3 px-3 sm:px-6 text-sm sm:text-base font-medium text-[#6b7b8c]">
-                      Conversion Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  <tr className="hover:bg-gray-50">
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#254280] font-medium text-sm sm:text-base">
-                        LD002
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#1a1a1a] font-medium text-sm sm:text-base whitespace-nowrap">
-                        Sneha Patel
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base">
-                        Health Insurance
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base">
-                        Star Health Quote
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base whitespace-nowrap">
-                        2024-03-15
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50">
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#254280] font-medium text-sm sm:text-base">
-                        LD006
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#1a1a1a] font-medium text-sm sm:text-base whitespace-nowrap">
-                        Rajesh Kumar
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base">
-                        Motor Insurance
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base">
-                        HDFC ERGO Quote
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base whitespace-nowrap">
-                        2024-03-18
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50">
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#254280] font-medium text-sm sm:text-base">
-                        LD007
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#1a1a1a] font-medium text-sm sm:text-base whitespace-nowrap">
-                        Meera Reddy
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base">
-                        Life Insurance
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base">
-                        ICICI Prudential Quote
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 sm:py-4 sm:px-6">
-                      <span className="text-[#6b7b8c] text-sm sm:text-base whitespace-nowrap">
-                        2024-03-20
-                      </span>
-                    </td>
-                  </tr>
+                        {searchTerm || statusFilter !== "all"
+                          ? "No leads found matching your criteria"
+                          : "No leads available. Create your first lead by clicking 'Request for Quotation'"}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Quotation Upload Modal */}
+      <QuotationUploadModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddLead}
+      />
     </DashboardLayout>
   );
 }
